@@ -87,19 +87,25 @@ public class MeetingRestController {
     }
 
     @RequestMapping(value = "{id}/participants", method = RequestMethod.POST)
-    public ResponseEntity<?> addParticipant(@PathVariable("id") long id, @RequestBody Map<String, String> json) {
+    public ResponseEntity<?> addParticipant(@PathVariable("id") long id, @RequestBody String login) {
 
         Meeting currentMeeting = meetingService.findById(id);
         if (currentMeeting == null) {
             return new ResponseEntity(HttpStatus.NOT_FOUND);
         }
-        String login = json.get("login");
+
         if (login == null) {
             return new ResponseEntity<String>("Unable to find participant login in the request body",
                     HttpStatus.BAD_REQUEST);
         }
 
         Participant participantToAdd = participantService.findByLogin(login);
+        if(participantToAdd == null){
+            Participant newParticipant = new Participant();
+            newParticipant.setLogin(login);
+            newParticipant.setPassword(login);
+            participantToAdd = participantService.add(newParticipant);
+        }
         currentMeeting.addParticipant(participantToAdd);
         meetingService.update(currentMeeting);
 
